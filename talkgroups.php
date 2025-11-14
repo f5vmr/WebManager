@@ -43,6 +43,13 @@
             font-size: 1em;
             margin: 0;
         }
+        .center-logo img {
+    width: 25%;
+    height: auto;
+    display: block;
+    margin: 20px auto;
+}
+
     </style>
 </head>
 <body>
