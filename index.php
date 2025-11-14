@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canarias SVX Node Monitor</title>
+    <title>North America SVX Node Monitor</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,14 +20,14 @@
 
     <!-- Main Content Section -->
     <main>
-        <h1>Canarias SVX Node Monitor</h1>
+        <h1>North America SVX Node Monitor</h1>
         <div class="container" id="nodes-container"></div>
     </main>
    <!-- Centered Logo Section -->
 <!-- Centered Logo Section -->
 <!-- Centered Logo Section -->
 <div style="width: 100%; display: flex; justify-content: center; margin: 20px 0;">
-    <img src="canarias_logo.png" alt="SVX Logo" style="max-width:200px; height:auto;">
+    <img src="northAMSVX.png" alt="SVX Logo" style="max-width:200px; height:auto;">
 </div>
     <!-- Footer Section -->
     <footer>
