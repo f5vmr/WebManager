@@ -81,7 +81,7 @@
     </main> -->
     <!-- Centered Logo Section -->
     <div class="center-logo">
-        <img src="canarias_logo.png" alt="SVX Logo">
+        <img src="yorks_logo.png" alt="SVX Logo">
     </div>
 
     <!-- Footer Section -->
