@@ -13,6 +13,7 @@ $tgdb_array = [
     '350'   => 'Cayman Islands',
     '358'   => 'St Lucia',
     '360'   => 'Bahamas',
+    '368'   => 'Cuba',
     '370'   => 'Bermuda',
     '374'   => 'Trinidad & Tobago',
     '400'   => 'Caribbean',
