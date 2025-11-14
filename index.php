@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Canarias SVX Node Monitor</title>
+    <title>UK-Wide SVX Node Monitor</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -20,7 +20,7 @@
 
     <!-- Main Content Section -->
     <main>
-        <h1>Canarias SVX Node Monitor</h1>
+        <h1>UK-Wide SVX Node Monitor</h1>
         <div class="container" id="nodes-container"></div>
     </main>
    <!-- Centered Logo Section -->

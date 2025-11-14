@@ -62,8 +62,8 @@ session_start();
             <div class="portal-links">
                 <div class="portal">
                     <a href="http://svxreflector.sytes.net" target="_blank">
-                        <img src="../logo.png" alt="Canarias Portal" class="portal-logo">
-                        <p>Canarias Wide</p>
+                        <img src="../logo.png" alt="UK-Wide Portal" class="portal-logo">
+                        <p>UK-Wide Wide</p>
                     </a>
                 </div>
                 
