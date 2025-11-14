@@ -44,7 +44,7 @@
             margin: 0;
         }
         .center-logo img {
-    width: 25%;
+    width: 15%;
     height: auto;
     display: block;
     margin: 20px auto;
