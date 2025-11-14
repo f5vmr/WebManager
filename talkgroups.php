@@ -8,12 +8,12 @@
     <style>
         /* Styling for Talk Groups - One Box Per Line */
         .talkgroup-container {
-            display: flex;
-            flex-direction: column; /* Arrange boxes vertically */
-            gap: 15px;
-            padding: 20px;
-            align-items: center; /* Center the boxes on the page */
-        }
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
 
         .talkgroup-box {
             background-color: var(--card-bg-color);
@@ -43,6 +43,13 @@
             font-size: 1em;
             margin: 0;
         }
+        .center-logo img {
+    width: 15%;
+    height: auto;
+    display: block;
+    margin: 20px auto;
+}
+
     </style>
 </head>
 <body>
