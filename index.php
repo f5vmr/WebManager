@@ -14,6 +14,7 @@
             <a href="nodes.php" class="info-link">Node Information</a>
             <a href="talkgroups.php" class="info-link">Talk Groups</a>
             <a href="downloads/index.php" class="info-link">Downloads</a>
+            <a href="admin.php" class="info-link">Admin</a>
             
         </div>
     </header>

@@ -3,7 +3,7 @@ ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
 error_reporting(E_ALL);
 // URL to fetch the JSON data from
-$url = "http://svxreflector.sytes.net:18080/status";
+$url = "127.0.0.1:8080/status";
 
 // Fetch the JSON data using cURL
 $ch = curl_init();
