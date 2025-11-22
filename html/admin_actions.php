@@ -119,38 +119,45 @@ switch($action){
         break;
 
     case 'add':
-        $callsign = strtoupper(trim($data['callsign'] ?? ''));
-        if (!$callsign || !preg_match('/^[A-Z0-9]+$/', $callsign)) {
-            echo json_encode(['success'=>false,'message'=>'Invalid callsign']);
+    $callsign = strtoupper(trim($data['callsign'] ?? ''));
+    if (!$callsign || !preg_match('/^[A-Z0-9]+$/', $callsign)) {
+        echo json_encode(['success'=>false,'message'=>'Invalid callsign']);
+        exit();
+    }
+
+    // Check if exists
+    foreach($users as $u){
+        if($u['callsign']===$callsign){
+            echo json_encode(['success'=>false,'message'=>'Callsign exists']);
             exit();
         }
+    }
 
-        // Check if exists
+    // Generate unique pseudo-password and real password
+    do {
+        $pseudo = strtolower($callsign); // pseudo key
+        $realpw = generate_random_password(13); // alphanumeric only
+        $exists = false;
         foreach($users as $u){
-            if($u['callsign']===$callsign){
-                echo json_encode(['success'=>false,'message'=>'Callsign exists']);
-                exit();
-            }
+            if($u['password']===$realpw) { $exists = true; break; }
         }
+    } while($exists);
 
-        // Generate unique pseudo-password and real password
-        do {
-            $pseudo = strtolower($callsign); // pseudo key
-            $realpw = generate_random_password(13); // alphanumeric only
-            $exists = false;
-            foreach($users as $u){
-                if($u['password']===$realpw) { $exists = true; break; }
-            }
-        } while($exists);
+    $users[] = [
+        'callsign' => $callsign,
+        'pseudo' => $pseudo,
+        'password' => $realpw,
+        'active' => true
+    ];
 
-        $users[] = [
-            'callsign' => $callsign,
-            'pseudo' => $pseudo,
-            'password' => $realpw,
-            'active' => true
-        ];
-        echo json_encode(['success'=>true]);
-        break;
+    // Return generated password so frontend can display it
+    echo json_encode([
+        'success' => true,
+        'callsign' => $callsign,
+        'password' => $realpw
+    ]);
+    break;
+
 
     case 'activate':
     case 'deactivate':

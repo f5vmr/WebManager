@@ -47,26 +47,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Handle Add New Callsign form
     document.querySelector('#addUserForm').onsubmit = async e => {
-        e.preventDefault();
-        const callsign = e.target.callsign.value.toUpperCase(); // force uppercase
-        if (!callsign.match(/^[A-Z0-9]+$/)) {
-            alert('Callsign must be alphanumeric and uppercase.');
-            return;
-        }
-        const resp = await fetch('admin_actions.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'add', callsign })
-        });
-        const data = await resp.json();
-        if (data.success) {
-            e.target.reset();
-            loadUsers();
-            alert(`Callsign ${callsign} added successfully.`);
-        } else {
-            alert(`Failed to add callsign ${callsign}. It may already exist.`);
-        }
-    };
+    e.preventDefault();
+    const callsign = e.target.callsign.value.toUpperCase(); // force uppercase
+
+    if (!callsign.match(/^[A-Z0-9]+$/)) {
+        alert('Callsign must be alphanumeric and uppercase.');
+        return;
+    }
+
+    const resp = await fetch('admin_actions.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'add', callsign })
+    });
+
+    const data = await resp.json();
+
+    if (data.success) {
+        e.target.reset();
+        alert(`Callsign ${data.callsign} added successfully.\nGenerated password: ${data.password}`);
+        loadUsers(); // refresh table to show new callsign
+    } else {
+        alert(`Failed to add callsign ${callsign}. ${data.message || ''}`);
+    }
+};
+
 
     // Commit changes & backup config
     document.querySelector('#commitBtn').onclick = async () => {
