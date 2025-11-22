@@ -9,7 +9,7 @@ header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *'); // Allow cross-origin requests if needed
 
 // Remote status source URL
-$remoteStatusUrl = "127.0.0.1:8080/status";
+$remoteStatusUrl = "http://127.0.0.1:8080/status";
 
 // Validate the URL
 if (!filter_var($remoteStatusUrl, FILTER_VALIDATE_URL)) {
