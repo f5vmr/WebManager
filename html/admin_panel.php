@@ -23,8 +23,13 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     <div class="user-form">
         <h2>Add New Callsign</h2>
         <form id="addUserForm">
-            <input type="text" name="callsign" placeholder="CALLSIGN" required>
-            <button type="submit">Add</button>
+        <input type="text" name="callsign" placeholder="CALLSIGN" required id="callsignInput">
+        <script>
+        document.getElementById('callsignInput').addEventListener('input', function() {
+            this.value = this.value.toUpperCase();
+        });
+        </script>
+        <button type="submit">Add</button>
         </form>
     </div>
 
