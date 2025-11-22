@@ -28,25 +28,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
         </form>
     </div>
 
-    <!-- Password Step -->
-    <div id="passwordStep" class="user-form" style="display:none;">
-        <h3>Password Generated</h3>
-        <p>Callsign: <span id="pwCallsign"></span></p>
-        <p>Generated Password: <span id="generatedPassword"></span></p>
-        <button id="proceedBtn">Proceed</button>
-        <button id="regenerateBtn">Generate New Password</button>
-        <button id="cancelBtn">Cancel</button>
-    </div>
-    <!-- Preview Step -->
-    <div id="previewStep" class="user-form" style="display:none;">
-        <h3>Preview Lines</h3>
-        <pre id="previewText"></pre>
-        <button id="confirmAddBtn">Confirm & Add</button>
-        <button id="cancelPreviewBtn">Cancel</button>
-    </div>
-
-
-    <!-- Users Table -->
+    <!-- Existing Users Table -->
     <div class="user-form">
         <h2>Existing Users</h2>
         <table class="users-list" id="usersTable">
@@ -58,29 +40,26 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
                     <th>Action</th>
                 </tr>
             </thead>
-            <tbody>
-                <!-- Filled dynamically -->
-            </tbody>
+            <tbody></tbody>
         </table>
     </div>
 
+    <!-- Preview / Commit -->
     <div style="text-align:center; margin-top:20px;">
         <button id="commitBtn">Commit Changes & Backup Config</button>
+        <button id="cancelBtn">Cancel</button>
         <button id="refreshBtn">Refresh Table</button>
     </div>
 
-    <p id="serviceNotice" style="color:#f0a;">After committing, please manually restart svxreflector service.</p>
+    <p id="serviceNotice" style="color:#f0a;">
+        After committing, please manually restart svxreflector service.
+    </p>
 </div>
 
 <script src="admin_panel.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const usersTableBody = document.querySelector('#usersTable tbody');
-    const passwordStep = document.querySelector('#passwordStep');
-    const pwCallsign = document.querySelector('#pwCallsign');
-    const generatedPassword = document.querySelector('#generatedPassword');
-    let currentCallsign = '';
-    let currentPassword = '';
 
     async function loadUsers() {
         const resp = await fetch('admin_actions.php', {
@@ -124,7 +103,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Step 1: Generate Password ---
     document.querySelector('#addUserForm').onsubmit = async e => {
         e.preventDefault();
         const callsign = e.target.callsign.value.toUpperCase();
@@ -132,62 +110,21 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Callsign must be alphanumeric and uppercase.');
             return;
         }
-
-        const resp = await fetch('generate_password.php', {
+        const resp = await fetch('admin_actions.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ callsign })
+            body: JSON.stringify({ action: 'add', callsign })
         });
         const data = await resp.json();
-        if (!data.success) { alert('Failed to generate password'); return; }
-
-        currentCallsign = callsign;
-        currentPassword = data.password;
-
-        pwCallsign.textContent = currentCallsign;
-        generatedPassword.textContent = currentPassword;
-        passwordStep.style.display = 'block';
-    };
-
-    // --- Step 2: Password Step Buttons ---
-    document.querySelector('#proceedBtn').onclick = () => {
-        // Prepare preview
-        const preview = `[USERS]\n${currentCallsign} = ${currentCallsign.toLowerCase()}\n\n[PASSWORDS]\n${currentCallsign.toLowerCase()} = ${currentPassword}`;
-    document.querySelector('#previewText').textContent = preview;
-        passwordStep.style.display = 'none';
-    document.querySelector('#previewStep').style.display = 'block';
-};
-
-        const data = await resp.json();
         if (data.success) {
-            passwordStep.style.display = 'none';
-            document.querySelector('#addUserForm').reset();
+            alert(`Callsign ${callsign} added with password: ${data.password}`);
+            e.target.reset();
             loadUsers();
-            alert(`Callsign ${currentCallsign} added successfully.`);
         } else {
-            alert('Failed to add callsign. It may already exist.');
+            alert(data.message || 'Failed to add callsign.');
         }
     };
 
-    document.querySelector('#regenerateBtn').onclick = async () => {
-        const resp = await fetch('generate_password.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ callsign: currentCallsign })
-        });
-        const data = await resp.json();
-        if (data.success) {
-            currentPassword = data.password;
-            generatedPassword.textContent = currentPassword;
-        }
-    };
-
-    document.querySelector('#cancelBtn').onclick = () => {
-        passwordStep.style.display = 'none';
-        document.querySelector('#addUserForm').reset();
-    };
-
-    // --- Commit & Refresh ---
     document.querySelector('#commitBtn').onclick = async () => {
         const resp = await fetch('admin_actions.php', {
             method: 'POST',
@@ -198,6 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert(data.success ? 'Config committed and backup created.' : 'Error committing changes.');
     };
 
+    document.querySelector('#cancelBtn').onclick = loadUsers;
     document.querySelector('#refreshBtn').onclick = loadUsers;
 
     loadUsers();

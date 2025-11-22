@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
     const usersTableBody = document.querySelector('#usersTable tbody');
 
-    // Load users from admin_actions.php
+    // Load and display users
     async function loadUsers() {
         const resp = await fetch('admin_actions.php', {
             method: 'POST',
@@ -28,55 +28,54 @@ document.addEventListener('DOMContentLoaded', () => {
         attachRowHandlers();
     }
 
-    // Attach toggle activate/deactivate buttons
+    // Attach activate/deactivate buttons
     function attachRowHandlers() {
         document.querySelectorAll('.toggle-button').forEach(btn => {
             btn.onclick = async () => {
                 const row = btn.closest('tr');
                 const callsign = row.dataset.callsign;
                 const action = btn.textContent === 'Deactivate' ? 'deactivate' : 'activate';
-                await fetch('admin_actions.php', {
+
+                const resp = await fetch('admin_actions.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ action, callsign })
                 });
-                loadUsers();
+                const data = await resp.json();
+                if (data.success) loadUsers();
             };
         });
     }
 
-    // Handle Add New Callsign form
-document.querySelector('#addUserForm').onsubmit = async e => {
-    e.preventDefault();
-    const callsign = e.target.callsign.value.toUpperCase(); // force uppercase
-    if (!callsign.match(/^[A-Z0-9]+$/)) {
-        alert('Callsign must be alphanumeric and uppercase.');
-        return;
-    }
+    // Add new user
+    document.querySelector('#addUserForm').onsubmit = async e => {
+        e.preventDefault();
+        const callsign = e.target.callsign.value.toUpperCase();
+        if (!callsign.match(/^[A-Z0-9]+$/)) {
+            alert('Callsign must be alphanumeric and uppercase.');
+            return;
+        }
 
-    const resp = await fetch('admin_actions.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'add', callsign })
-    });
+        const resp = await fetch('admin_actions.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'add', callsign })
+        });
+        const data = await resp.json();
 
-    const data = await resp.json();
+        if (data.success) {
+            // Show generated password inline above table temporarily
+            const notice = document.getElementById('serviceNotice');
+            notice.textContent = `Callsign ${callsign} added. Generated password: ${data.password}`;
+            notice.style.color = '#0f0'; // green for success
+            e.target.reset();
+            loadUsers();
+        } else {
+            alert(data.message || 'Failed to add callsign.');
+        }
+    };
 
-    if (data.success) {
-        e.target.reset();
-        loadUsers(); // refresh table
-
-        // Show generated password to admin immediately
-        alert(`Callsign ${data.callsign} added successfully.\nGenerated password: ${data.password}`);
-    } else {
-        alert(`Failed to add callsign ${callsign}: ${data.message || 'Unknown error'}`);
-    }
-};
-
-
-
-
-    // Commit changes & backup config
+    // Commit changes
     document.querySelector('#commitBtn').onclick = async () => {
         const resp = await fetch('admin_actions.php', {
             method: 'POST',
@@ -87,7 +86,10 @@ document.querySelector('#addUserForm').onsubmit = async e => {
         alert(data.success ? 'Config committed and backup created.' : 'Error committing changes.');
     };
 
-    // Refresh table
+    // Cancel reloads table
+    document.querySelector('#cancelBtn').onclick = loadUsers;
+
+    // Refresh reloads table
     document.querySelector('#refreshBtn').onclick = loadUsers;
 
     // Initial load
