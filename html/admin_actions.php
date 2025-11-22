@@ -20,38 +20,53 @@ function backupConfig() {
 function readConfig() {
     $lines = file(SVX_CONF, FILE_IGNORE_NEW_LINES);
     $users = [];
-    $pws = [];
+    $pseudoMap = [];
     $active = [];
     $mode = '';
+
     foreach ($lines as $line) {
         $trim = trim($line);
-        if ($trim === '[USERS]') { $mode='users'; continue; }
-        if ($trim === '[PASSWORDS]') { $mode='pass'; continue; }
-        if (empty($trim) || str_starts_with($trim,'[')) { $mode=''; continue; }
-        
-        if($mode==='users'){
+
+        if ($trim === '[USERS]') { $mode = 'users'; continue; }
+        if ($trim === '[PASSWORDS]') { $mode = 'passwords'; continue; }
+        if (empty($trim) || str_starts_with($trim,'[')) { $mode = ''; continue; }
+
+        if ($mode === 'users') {
             $active[] = !str_starts_with($trim,'#');
-            $users[] = ltrim($trim,'#');
-        } elseif($mode==='pass'){
-            if(str_contains($trim,'=')){
-                [$pseudo,$pw] = explode('=',$trim,2);
-                $pseudo = trim($pseudo);
-                $pw = trim($pw);
-                $pws[$pseudo] = $pw;
+            $users[] = ltrim($trim,'#'); // contains the callsign or pseudopassword line
+        }
+
+        if ($mode === 'passwords') {
+            if (str_contains($trim,'=')) {
+                [$pseudo, $realpw] = explode('=', $trim, 2);
+                $pseudoMap[trim($pseudo)] = trim($realpw);
             }
         }
     }
 
-    // Combine users with real password from pseudo-password map
     $result = [];
-    foreach($users as $idx => $call){
-        $pseudo = strtolower($call);
+    foreach ($users as $idx => $line) {
+        // Extract callsign and pseudo-password from [USERS]
+        // Assumes format: CALLSIGN = pseudopassword
+        if (str_contains($line, '=')) {
+            [$call, $pseudo] = explode('=', $line, 2);
+            $call = trim($call);
+            $pseudo = trim($pseudo);
+            $realpw = $pseudoMap[$pseudo] ?? '';
+        } else {
+            // No '=' in [USERS], assume call is the line, pseudo is same as call lowercase
+            $call = trim($line);
+            $pseudo = strtolower($call);
+            $realpw = $pseudoMap[$pseudo] ?? '';
+        }
+
         $result[] = [
             'callsign' => $call,
-            'password' => $pws[$pseudo] ?? '', // retrieve actual password
-            'active' => $active[$idx]
+            'password' => $realpw,
+            'active' => $active[$idx] ?? false
         ];
     }
+
     return $result;
 }
 
