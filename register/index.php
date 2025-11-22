@@ -62,7 +62,7 @@ session_start();
             <div class="portal-links">
                 <div class="portal">
                     <a href="http://uk.wide.yorkshire.network" target="_blank">
-                        <img src="../logo.png" alt="UK-Wide Portal" class="portal-logo">
+                        <img src="logo.png" alt="UK-Wide Portal" class="portal-logo">
                         <p>UK-Wide Wide</p>
                     </a>
                 </div>
