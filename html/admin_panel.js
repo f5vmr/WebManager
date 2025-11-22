@@ -48,7 +48,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle Add New Callsign form
 document.querySelector('#addUserForm').onsubmit = async e => {
     e.preventDefault();
-    const callsign = e.target.callsign.value.toUpperCase(); // force uppercase
+    const input = e.target.callsign;
+    const callsign = input.value.toUpperCase().trim();
+    input.value = callsign; // make sure the field reflects uppercase
+
     if (!callsign.match(/^[A-Z0-9]+$/)) {
         alert('Callsign must be alphanumeric and uppercase.');
         return;
@@ -63,15 +66,18 @@ document.querySelector('#addUserForm').onsubmit = async e => {
     const data = await resp.json();
 
     if (data.success) {
+        // show password immediately
+        alert(`Callsign ${data.callsign} added.\nGenerated password: ${data.password}\n\nNote: Press COMMIT to save to config file.`);
+        // refresh the table (calls fetch); even if in-memory not persisted to disk,
+        // we call fetch to get latest persisted state after commit — but this will
+        // show updates once you press Commit.
+        await loadUsers();
         e.target.reset();
-        loadUsers(); // refresh table
-
-        // Show generated password to admin immediately
-        alert(`Callsign ${data.callsign} added successfully.\nGenerated password: ${data.password}`);
     } else {
-        alert(`Failed to add callsign ${callsign}: ${data.message || 'Unknown error'}`);
+        alert(`Failed to add callsign: ${data.message || 'Unknown error'}`);
     }
 };
+
 
 
 
