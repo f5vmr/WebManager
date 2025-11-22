@@ -23,8 +23,9 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     <div class="user-form">
         <h2>Add New Callsign</h2>
         <form id="addUserForm">
-            <input type="text" name="callsign" placeholder="CALLSIGN" required>
-            <button type="submit">Generate Password</button>
+            <input type="text" name="callsign" placeholder="CALLSIGN" required
+            oninput="this.value = this.value.toUpperCase();">
+        <button type="submit">Generate Password</button>
         </form>
     </div>
 
