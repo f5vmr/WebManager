@@ -7,6 +7,8 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
 }
 
 define('SVX_CONF','/etc/svxlink/svxreflector.conf');
+include_once 'functions.php'; // contains generate_random_password()
+
 $data = json_decode(file_get_contents('php://input'), true);
 $action = $data['action'] ?? null;
 
@@ -26,14 +28,13 @@ function readConfig() {
 
     foreach ($lines as $line) {
         $trim = trim($line);
-
         if ($trim === '[USERS]') { $mode = 'users'; continue; }
         if ($trim === '[PASSWORDS]') { $mode = 'passwords'; continue; }
         if (empty($trim) || str_starts_with($trim,'[')) { $mode = ''; continue; }
 
         if ($mode === 'users') {
             $active[] = !str_starts_with($trim,'#');
-            $users[] = ltrim($trim,'#'); // contains the callsign or pseudopassword line
+            $users[] = ltrim($trim,'#'); // line in [USERS]
         }
 
         if ($mode === 'passwords') {
@@ -46,30 +47,27 @@ function readConfig() {
 
     $result = [];
     foreach ($users as $idx => $line) {
-        // Extract callsign and pseudo-password from [USERS]
-        // Assumes format: CALLSIGN = pseudopassword
-        if (str_contains($line, '=')) {
+        // Extract CALLSIGN and pseudopassword from [USERS]
+        if (str_contains($line,'=')) {
             [$call, $pseudo] = explode('=', $line, 2);
             $call = trim($call);
             $pseudo = trim($pseudo);
-            $realpw = $pseudoMap[$pseudo] ?? '';
         } else {
-            // No '=' in [USERS], assume call is the line, pseudo is same as call lowercase
             $call = trim($line);
             $pseudo = strtolower($call);
-            $realpw = $pseudoMap[$pseudo] ?? '';
         }
 
+        $realpw = $pseudoMap[$pseudo] ?? '';
         $result[] = [
             'callsign' => $call,
             'password' => $realpw,
+            'pseudo' => $pseudo,
             'active' => $active[$idx] ?? false
         ];
     }
 
     return $result;
 }
-
 
 function writeConfig($users) {
     backupConfig();
@@ -79,14 +77,15 @@ function writeConfig($users) {
     foreach($lines as $line){
         $trim = trim($line);
         if($trim==='[USERS]'){ $mode='users'; $out[]=$line; continue; }
-        if($trim==='[PASSWORDS]'){ $mode='pass'; $out[]=$line; $mode='pass'; continue; }
+        if($trim==='[PASSWORDS]'){ $mode='pass'; $out[]=$line; continue; }
         if(empty($trim) || str_starts_with($trim,'[')){ $out[]=$line; $mode=''; continue; }
+
         if($mode==='users'){
             $call = ltrim($line,'#');
             $found=false;
             foreach($users as $u){
                 if($u['callsign']===$call){
-                    $out[]=($u['active']?'':'#').$call;
+                    $out[]=($u['active']?'':'#').$call.' = '.$u['pseudo'];
                     $found=true;
                     break;
                 }
@@ -95,12 +94,15 @@ function writeConfig($users) {
         } elseif($mode==='pass'){
             [$pseudo,$pw] = explode('=',$line);
             $pseudo=trim($pseudo);
+            $found=false;
             foreach($users as $u){
-                if(strtolower($u['callsign'])===$pseudo){
+                if($u['pseudo']===$pseudo){
                     $out[]=$pseudo.'='.$u['password'];
+                    $found=true;
                     break;
                 }
             }
+            if(!$found) $out[]=$line;
         } else {
             $out[]=$line;
         }
@@ -115,15 +117,41 @@ switch($action){
     case 'fetch':
         echo json_encode(['success'=>true,'users'=>$users]);
         break;
+
     case 'add':
-        $callsign = strtoupper($data['callsign'] ?? '');
-        // Check exists
-        foreach($users as $u){ if($u['callsign']===$callsign){ echo json_encode(['success'=>false]); exit; } }
-        // Generate unique 13 char password
-        do { $pw=substr(bin2hex(random_bytes(8)),0,13); } while(in_array($pw,array_column($users,'password')));
-        $users[]=['callsign'=>$callsign,'password'=>$pw,'active'=>true];
+        $callsign = strtoupper(trim($data['callsign'] ?? ''));
+        if (!$callsign || !preg_match('/^[A-Z0-9]+$/', $callsign)) {
+            echo json_encode(['success'=>false,'message'=>'Invalid callsign']);
+            exit();
+        }
+
+        // Check if exists
+        foreach($users as $u){
+            if($u['callsign']===$callsign){
+                echo json_encode(['success'=>false,'message'=>'Callsign exists']);
+                exit();
+            }
+        }
+
+        // Generate unique pseudo-password and real password
+        do {
+            $pseudo = strtolower($callsign); // pseudo key
+            $realpw = generate_random_password(13); // alphanumeric only
+            $exists = false;
+            foreach($users as $u){
+                if($u['password']===$realpw) { $exists = true; break; }
+            }
+        } while($exists);
+
+        $users[] = [
+            'callsign' => $callsign,
+            'pseudo' => $pseudo,
+            'password' => $realpw,
+            'active' => true
+        ];
         echo json_encode(['success'=>true]);
         break;
+
     case 'activate':
     case 'deactivate':
         $callsign=$data['callsign'] ?? '';
@@ -135,10 +163,12 @@ switch($action){
         }
         echo json_encode(['success'=>true]);
         break;
+
     case 'commit':
         writeConfig($users);
         echo json_encode(['success'=>true]);
         break;
+
     default:
         echo json_encode(['success'=>false]);
         break;

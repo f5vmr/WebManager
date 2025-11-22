@@ -1,83 +1,87 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const usersTable = document.getElementById('users-table');
-    const addUserForm = document.getElementById('add-user-form');
+document.addEventListener('DOMContentLoaded', () => {
+    const usersTableBody = document.querySelector('#usersTable tbody');
 
-    // Fetch users from server
-    function fetchUsers() {
-        fetch('admin_actions.php', {
+    // Load users from admin_actions.php
+    async function loadUsers() {
+        const resp = await fetch('admin_actions.php', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({action: 'fetch'})
-        })
-        .then(resp => resp.json())
-        .then(data => {
-            if (data.success) {
-                renderTable(data.users);
-            }
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'fetch' })
         });
-    }
+        const data = await resp.json();
+        if (!data.success) return;
 
-    // Render the table
-    function renderTable(users) {
-        usersTable.innerHTML = '';
-        users.forEach(user => {
+        usersTableBody.innerHTML = '';
+        data.users.forEach(user => {
             const row = document.createElement('tr');
             row.dataset.callsign = user.callsign;
-
             row.innerHTML = `
                 <td>${user.callsign}</td>
-                <td class="pass-key">${user.password}</td>
-                <td>${user.status}</td>
-                <td class="action-buttons">
-                    <button class="toggle-button">${user.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}</button>
+                <td>${user.password}</td>
+                <td>${user.active ? 'ACTIVE' : 'INACTIVE'}</td>
+                <td>
+                    <button class="toggle-button">${user.active ? 'Deactivate' : 'Activate'}</button>
                 </td>
             `;
-            usersTable.appendChild(row);
+            usersTableBody.appendChild(row);
+        });
+        attachRowHandlers();
+    }
 
-            row.querySelector('.toggle-button').addEventListener('click', () => toggleUser(user.callsign));
+    // Attach toggle activate/deactivate buttons
+    function attachRowHandlers() {
+        document.querySelectorAll('.toggle-button').forEach(btn => {
+            btn.onclick = async () => {
+                const row = btn.closest('tr');
+                const callsign = row.dataset.callsign;
+                const action = btn.textContent === 'Deactivate' ? 'deactivate' : 'activate';
+                await fetch('admin_actions.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action, callsign })
+                });
+                loadUsers();
+            };
         });
     }
 
-    // Toggle ACTIVE/INACTIVE
-    function toggleUser(callsign) {
-        fetch('admin_actions.php', {
+    // Handle Add New Callsign form
+    document.querySelector('#addUserForm').onsubmit = async e => {
+        e.preventDefault();
+        const callsign = e.target.callsign.value.toUpperCase(); // force uppercase
+        if (!callsign.match(/^[A-Z0-9]+$/)) {
+            alert('Callsign must be alphanumeric and uppercase.');
+            return;
+        }
+        const resp = await fetch('admin_actions.php', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({action: 'toggle', callsign: callsign})
-        })
-        .then(resp => resp.json())
-        .then(data => {
-            if (data.success) fetchUsers();
-            else alert('Error: ' + data.error);
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'add', callsign })
         });
-    }
+        const data = await resp.json();
+        if (data.success) {
+            e.target.reset();
+            loadUsers();
+            alert(`Callsign ${callsign} added successfully.`);
+        } else {
+            alert(`Failed to add callsign ${callsign}. It may already exist.`);
+        }
+    };
 
-    // Add new user
-    if (addUserForm) {
-        addUserForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const callsignInput = document.getElementById('new-callsign');
-            const callsign = callsignInput.value.trim().toUpperCase();
-            if (!callsign) return alert('Enter a callsign');
-
-            fetch('admin_actions.php', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({action: 'add', callsign: callsign})
-            })
-            .then(resp => resp.json())
-            .then(data => {
-                if (data.success) {
-                    alert(`User ${data.callsign} added with password: ${data.password}`);
-                    callsignInput.value = '';
-                    fetchUsers();
-                } else {
-                    alert('Error: ' + data.error);
-                }
-            });
+    // Commit changes & backup config
+    document.querySelector('#commitBtn').onclick = async () => {
+        const resp = await fetch('admin_actions.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'commit' })
         });
-    }
+        const data = await resp.json();
+        alert(data.success ? 'Config committed and backup created.' : 'Error committing changes.');
+    };
 
-    // Initial fetch
-    fetchUsers();
+    // Refresh table
+    document.querySelector('#refreshBtn').onclick = loadUsers;
+
+    // Initial load
+    loadUsers();
 });
