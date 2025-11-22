@@ -9,7 +9,7 @@ if (!isset($_SESSION['admin_logged_in'])) {
     exit();
 }
 
-include_once "../config/functions.php"; // contains generate_random_password()
+include_once "functions.php"; // contains generate_random_password()
 
 // Validate input
 $callsign = strtoupper(trim($_POST['callsign'] ?? ''));
