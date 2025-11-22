@@ -1,32 +1,16 @@
 <?php
-// DEBUG: show errors in response so we can see failures immediately
-ini_set('display_errors', 1);
-ini_set('display_startup_errors', 1);
-error_reporting(E_ALL);
-
 session_start();
-header('Content-Type: application/json');
-
-// Auth check
 if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
     http_response_code(403);
     echo json_encode(['success'=>false,'message'=>'Not authorized']);
     exit();
 }
 
-// Path to functions.php — adjust if yours is elsewhere
-$functionsPath = __DIR__ . '/../config/functions.php';
-if (!file_exists($functionsPath)) {
-    echo json_encode(['success'=>false,'message'=>"functions.php not found at $functionsPath"]);
-    exit();
-}
-include_once $functionsPath;
-
 define('SVX_CONF','/etc/svxlink/svxreflector.conf');
+include_once 'functions.php'; // contains generate_random_password()
 
 $data = json_decode(file_get_contents('php://input'), true);
 $action = $data['action'] ?? null;
-
 
 // --- Helpers ---
 function backupConfig() {
@@ -141,41 +125,37 @@ switch($action){
         exit();
     }
 
-    // Check exists (case-sensitive; our callsigns are uppercase)
+    // Check if exists
     foreach($users as $u){
-        if($u['callsign'] === $callsign){
+        if($u['callsign']===$callsign){
             echo json_encode(['success'=>false,'message'=>'Callsign exists']);
             exit();
         }
     }
 
-    // Generate unique pseudo (lowercase callsign) and unique real password
-    $pseudo = strtolower($callsign);
+    // Generate unique pseudo-password and real password
     do {
-        $realpw = generate_random_password(13); // your function
+        $pseudo = strtolower($callsign); // pseudo key
+        $realpw = generate_random_password(13); // alphanumeric only
         $exists = false;
         foreach($users as $u){
-            if(isset($u['password']) && $u['password'] === $realpw) { $exists = true; break; }
+            if($u['password']===$realpw) { $exists = true; break; }
         }
     } while($exists);
 
-    // Add to in-memory users list (will be written only on commit)
     $users[] = [
         'callsign' => $callsign,
-        'pseudo'   => $pseudo,
+        'pseudo' => $pseudo,
         'password' => $realpw,
-        'active'   => true
+        'active' => true
     ];
 
-    // Return the generated password so the front-end can show it
     echo json_encode([
-        'success'  => true,
+        'success' => true,
         'callsign' => $callsign,
-        'password' => $realpw
+        'password' => $realpw // return it to the front-end
     ]);
-    exit();
     break;
-
 
 
 
