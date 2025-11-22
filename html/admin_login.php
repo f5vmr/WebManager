@@ -57,10 +57,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <div class="login-container">
     <h2>Admin Login</h2>
     <form method="POST">
-        <input type="text" name="username" placeholder="Callsign" required>
-        <input type="password" name="password" placeholder="Password" required>
-        <button type="submit">Login</button>
-    </form>
+    <input type="text" name="username" placeholder="Callsign" required
+           oninput="this.value = this.value.toUpperCase();">
+    <input type="password" name="password" placeholder="Password" required>
+    <button type="submit">Login</button>
+</form>
+
     <?php if ($error) echo "<p class='error'>" . htmlspecialchars($error) . "</p>"; ?>
 </div>
 </body>
