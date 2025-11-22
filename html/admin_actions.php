@@ -133,10 +133,10 @@ switch($action){
         }
     }
 
-    // Generate unique pseudo-password and real password
+    // Generate unique 13-character alphanumeric password
     do {
         $pseudo = strtolower($callsign); // pseudo key
-        $realpw = generate_random_password(13); // alphanumeric only
+        $realpw = generate_random_password(13);
         $exists = false;
         foreach($users as $u){
             if($u['password']===$realpw) { $exists = true; break; }
@@ -150,13 +150,13 @@ switch($action){
         'active' => true
     ];
 
-    // Return generated password so frontend can display it
     echo json_encode([
         'success' => true,
         'callsign' => $callsign,
         'password' => $realpw
     ]);
     break;
+
 
 
     case 'activate':
