@@ -137,5 +137,16 @@ switch($action){
     default:
         echo json_encode(['success'=>false,'message'=>'Unknown action']);
         break;
+    case 'generate':
+    $callsign = strtoupper(trim($data['callsign'] ?? ''));
+    if (!$callsign || !preg_match('/^[A-Z0-9]+$/', $callsign)) {
+        echo json_encode(['success'=>false,'message'=>'Invalid callsign']);
+        exit();
+    }
+
+    $password = generate_random_password(13);
+    echo json_encode(['success'=>true,'password'=>$password]);
+    break;
+
 }
 

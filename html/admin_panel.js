@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     const usersTableBody = document.querySelector('#usersTable tbody');
+    const previewTbody = document.querySelector('#previewTable tbody');
 
     // Load and display users
     async function loadUsers() {
@@ -47,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Add new user
+    // Add new user (generate password & preview)
     document.querySelector('#addUserForm').onsubmit = async e => {
         e.preventDefault();
         const callsign = e.target.callsign.value.toUpperCase();
@@ -59,35 +60,60 @@ document.addEventListener('DOMContentLoaded', () => {
         const resp = await fetch('admin_actions.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'add', callsign })
+            body: JSON.stringify({ action: 'generate', callsign })
         });
-        const data = await resp.json();
 
+        const data = await resp.json();
         if (data.success) {
-            // Show generated password inline above table temporarily
-            const notice = document.getElementById('serviceNotice');
-            notice.textContent = `Callsign ${callsign} added. Generated password: ${data.password}`;
-            notice.style.color = '#0f0'; // green for success
-            e.target.reset();
-            loadUsers();
+            previewTbody.innerHTML = ''; // clear old preview
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${callsign}</td>
+                <td>${data.password}</td>
+            `;
+            previewTbody.appendChild(row);
+
+            // Store new user temporarily
+            window.newUser = { callsign, password: data.password };
         } else {
-            alert(data.message || 'Failed to add callsign.');
+            alert(`Failed to generate password: ${data.message}`);
         }
     };
 
-    // Commit changes
+    // Commit new user from preview
     document.querySelector('#commitBtn').onclick = async () => {
+        if (!window.newUser) {
+            alert('No new user to commit.');
+            return;
+        }
+
         const resp = await fetch('admin_actions.php', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'commit' })
+            body: JSON.stringify({
+                action: 'add',
+                callsign: window.newUser.callsign,
+                password: window.newUser.password
+            })
         });
+
         const data = await resp.json();
-        alert(data.success ? 'Config committed and backup created.' : 'Error committing changes.');
+        if (data.success) {
+            alert(`Callsign ${window.newUser.callsign} committed successfully.`);
+            window.newUser = null;
+            previewTbody.innerHTML = '';
+            loadUsers();
+        } else {
+            alert(`Failed to commit: ${data.message}`);
+        }
     };
 
-    // Cancel reloads table
-    document.querySelector('#cancelBtn').onclick = loadUsers;
+    // Cancel reloads table and clears preview
+    document.querySelector('#cancelBtn').onclick = () => {
+        previewTbody.innerHTML = '';
+        window.newUser = null;
+        loadUsers();
+    };
 
     // Refresh reloads table
     document.querySelector('#refreshBtn').onclick = loadUsers;

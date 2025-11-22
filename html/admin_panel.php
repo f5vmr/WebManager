@@ -28,6 +28,21 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
         <button type="submit">Generate Password</button>
         </form>
     </div>
+    <div class="user-form">
+    <h2>New Callsign Preview</h2>
+    <table id="previewTable">
+        <thead>
+            <tr>
+                <th>Callsign</th>
+                <th>Password</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Filled dynamically -->
+        </tbody>
+    </table>
+    </div>
+
 
     <!-- Existing Users Table -->
     <div class="user-form">
