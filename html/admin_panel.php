@@ -30,7 +30,7 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
     </div>
     <div class="user-form">
     <h2>New Callsign Preview</h2>
-    <table id="previewTable">
+    <table class="users-list" id="previewTable">
         <thead>
             <tr>
                 <th>Callsign</th>
@@ -38,10 +38,11 @@ if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== tru
             </tr>
         </thead>
         <tbody>
-            <!-- Filled dynamically -->
+            <!-- New generated callsign will appear here -->
         </tbody>
     </table>
-    </div>
+</div>
+
 
 
     <!-- Existing Users Table -->
