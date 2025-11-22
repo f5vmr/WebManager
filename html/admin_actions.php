@@ -28,26 +28,33 @@ function readConfig() {
         if ($trim === '[USERS]') { $mode='users'; continue; }
         if ($trim === '[PASSWORDS]') { $mode='pass'; continue; }
         if (empty($trim) || str_starts_with($trim,'[')) { $mode=''; continue; }
+        
         if($mode==='users'){
             $active[] = !str_starts_with($trim,'#');
             $users[] = ltrim($trim,'#');
         } elseif($mode==='pass'){
-            [$pseudo,$pw] = explode('=',$trim);
-            $pws[trim($pseudo)] = trim($pw);
+            if(str_contains($trim,'=')){
+                [$pseudo,$pw] = explode('=',$trim,2);
+                $pseudo = trim($pseudo);
+                $pw = trim($pw);
+                $pws[$pseudo] = $pw;
+            }
         }
     }
-    // Combine users with real password
-    $result=[];
-    foreach($users as $idx=>$call){
+
+    // Combine users with real password from pseudo-password map
+    $result = [];
+    foreach($users as $idx => $call){
         $pseudo = strtolower($call);
         $result[] = [
-            'callsign'=>$call,
-            'password'=>$pws[$pseudo] ?? '',
-            'active'=>$active[$idx]
+            'callsign' => $call,
+            'password' => $pws[$pseudo] ?? '', // retrieve actual password
+            'active' => $active[$idx]
         ];
     }
     return $result;
 }
+
 
 function writeConfig($users) {
     backupConfig();
