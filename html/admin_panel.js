@@ -48,10 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Handle Add New Callsign form
 document.querySelector('#addUserForm').onsubmit = async e => {
     e.preventDefault();
-    const input = e.target.callsign;
-    const callsign = input.value.toUpperCase(); // force uppercase
-    input.value = callsign;
-
+    const callsign = e.target.callsign.value.toUpperCase(); // force uppercase
     if (!callsign.match(/^[A-Z0-9]+$/)) {
         alert('Callsign must be alphanumeric and uppercase.');
         return;
@@ -67,12 +64,15 @@ document.querySelector('#addUserForm').onsubmit = async e => {
 
     if (data.success) {
         e.target.reset();
-        await loadUsers(); // refresh table
-        alert(`Callsign ${data.callsign} added successfully. Generated password: ${data.password}`);
+        loadUsers(); // refresh table
+
+        // Show generated password to admin immediately
+        alert(`Callsign ${data.callsign} added successfully.\nGenerated password: ${data.password}`);
     } else {
-        alert(`Failed to add callsign: ${data.message || 'Unknown error'}`);
+        alert(`Failed to add callsign ${callsign}: ${data.message || 'Unknown error'}`);
     }
 };
+
 
 
 
