@@ -1,39 +1,47 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 session_start();
 
-// Require the config using absolute path to avoid relative path issues
+// Include config
 require_once __DIR__ . '/../config/config.php';
 
-// Initialize error variable
 $error = '';
 
-// Handle POST login
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $username = trim($_POST['username'] ?? '');
+    // Force uppercase callsign
+    $username = strtoupper(trim($_POST['username'] ?? ''));
     $password = $_POST['password'] ?? '';
 
-    if ($username && $password) {
-        if (isset($ADMIN_USERS[$username]) && password_verify($password, $ADMIN_USERS[$username])) {
-            // Prevent session fixation
-            session_regenerate_id(true);
-
-            // Set session variables
-            $_SESSION['admin_logged_in'] = true;
-            $_SESSION['admin_username'] = $username;
-
-            // Log successful login
-            logAdminAction($username, 'Successful login');
-
-            // Redirect to admin panel
-            header("Location: admin_panel.php");
-            exit();
-        } else {
-            // Log failed login attempt
-            logAdminAction($username, 'Failed login attempt');
-            $error = "Invalid credentials";
-        }
+    if (!isset($ADMIN_USERS[$username])) {
+        $error = "Invalid callsign";
     } else {
-        $error = "Username and password are required";
+        // No password set yet → invite to set one
+        if (empty($ADMIN_USERS[$username])) {
+            if ($password === '') {
+                $error = "Please enter a password to set";
+            } else {
+                $hash = password_hash($password, PASSWORD_DEFAULT);
+                setAdminPassword($username, $hash);
+                logAdminAction($username, 'Password set for first time');
+                $error = "Password set! Please log in again.";
+            }
+        } else {
+            // Normal login
+            if (password_verify($password, $ADMIN_USERS[$username])) {
+                session_regenerate_id(true);
+                $_SESSION['admin_logged_in'] = true;
+                $_SESSION['admin_username'] = $username;
+                logAdminAction($username, 'Successful login');
+                header("Location: admin_panel.php");
+                exit();
+            } else {
+                logAdminAction($username, 'Failed login attempt');
+                $error = "Invalid credentials";
+            }
+        }
     }
 }
 ?>
