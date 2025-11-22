@@ -28,7 +28,7 @@
 <!-- Centered Logo Section -->
 <!-- Centered Logo Section -->
 <div style="width: 100%; display: flex; justify-content: center; margin: 20px 0;">
-    <img src="ukie.png" alt="SVX Logo" style="max-width:200px; height:auto;">
+    <img src="ukei.png" alt="SVX Logo" style="max-width:200px; height:auto;">
 </div>
     <!-- Footer Section -->
     <footer>
