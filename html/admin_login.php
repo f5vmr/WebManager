@@ -1,21 +1,39 @@
 <?php
 session_start();
-require_once '../config/config.php';
 
+// Require the config using absolute path to avoid relative path issues
+require_once __DIR__ . '/../config/config.php';
+
+// Initialize error variable
+$error = '';
+
+// Handle POST login
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $username = trim($_POST['username']);
-    $password = $_POST['password'];
+    $username = trim($_POST['username'] ?? '');
+    $password = $_POST['password'] ?? '';
 
-    if (isset($ADMIN_USERS[$username]) && password_verify($password, $ADMIN_USERS[$username])) {
-        session_regenerate_id(true); // Prevent session fixation
-        $_SESSION['admin_logged_in'] = true;
-        $_SESSION['admin_username'] = $username;
-        logAdminAction($username, 'Successful login');
-        header("Location: admin_panel.php");
-        exit();
+    if ($username && $password) {
+        if (isset($ADMIN_USERS[$username]) && password_verify($password, $ADMIN_USERS[$username])) {
+            // Prevent session fixation
+            session_regenerate_id(true);
+
+            // Set session variables
+            $_SESSION['admin_logged_in'] = true;
+            $_SESSION['admin_username'] = $username;
+
+            // Log successful login
+            logAdminAction($username, 'Successful login');
+
+            // Redirect to admin panel
+            header("Location: admin_panel.php");
+            exit();
+        } else {
+            // Log failed login attempt
+            logAdminAction($username, 'Failed login attempt');
+            $error = "Invalid credentials";
+        }
     } else {
-        logAdminAction($username, 'Failed login attempt');
-        $error = "Invalid credentials";
+        $error = "Username and password are required";
     }
 }
 ?>
@@ -35,7 +53,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <input type="password" name="password" placeholder="Password" required>
         <button type="submit">Login</button>
     </form>
-    <?php if (isset($error)) echo "<p class='error'>$error</p>"; ?>
+    <?php if ($error) echo "<p class='error'>" . htmlspecialchars($error) . "</p>"; ?>
 </div>
 </body>
 </html>
