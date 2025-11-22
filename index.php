@@ -41,23 +41,22 @@
         let activeNodes = {};
 
         async function fetchData() {
-            try {
-                const response = await fetch('status.php');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
+    try {
+        const response = await fetch('status.php');
+        const data = await response.json();
 
-                const data = await response.json();
+        console.log("Returned JSON:", data);   // ADD THIS
 
-                if (data.nodes) {
-                    updateNodes(data.nodes);
-                } else {
-                    console.error("No 'nodes' key found in the JSON response.");
-                }
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
+        if (data.nodes) {
+            updateNodes(data.nodes);
+        } else {
+            console.error("No 'nodes' key found in the JSON response.");
         }
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
+}
+
 
         function updateNodes(nodes) {
             const nodesContainer = document.getElementById('nodes-container');
